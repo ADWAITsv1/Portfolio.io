@@ -1,4 +1,0 @@
-source "https://rubygems.org"
-
-gem "jekyll", "~> 3.9.2"  # Downgrade to Jekyll 3.9.2
-gem "github-pages", "~> 226", group: :jekyll_plugins

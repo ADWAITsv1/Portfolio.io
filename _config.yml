@@ -2,8 +2,13 @@
 # Jekyll configuration for your portfolio website
 
 # Base URL and GitHub Pages URL
-baseurl: "/Portfolio.io"  # this should match your repository's name
+baseurl: "/Portfolio-Website"  # Updated to match your repository's name (based on folder structure)
 url: "https://adwaitsv1.github.io"  # the URL of your GitHub Pages
+
+# Site settings
+title: "Portfolio Website"
+description: "Personal portfolio and project showcase"
+author: "Adwait"
 
 # Markdown processor (Kramdown is the default)
 markdown: kramdown
@@ -13,9 +18,14 @@ permalink: /:categories/:year/:month/:day/:title/
 
 # Exclude files/folders from being processed by Jekyll
 exclude:
-  - GemFile
+  - Gemfile
   - Gemfile.lock
+  - Procfile
+  - requirements.txt
+  - runtime.txt
   - .jekyll-cache
+  - app.py
+  - .gitignore
   - .DS_Store
 
 # Build settings
@@ -25,7 +35,7 @@ plugins:
   - jekyll-paginate
   - jekyll-sitemap
 
-# Themes and layouts
+# Theme settings
 theme: jekyll-theme-primer  # Or choose any other theme you prefer
 defaults:
   - scope:
@@ -34,6 +44,18 @@ defaults:
       layout: "default"  # Set the layout that you want for all pages
 
 # Include the custom CSS and JavaScript
+sass:
+  sass_dir: static/css
+  style: compressed
+
+# Asset paths
 assets:
   css: "/static/css/style.css"
   js: "/static/js/script.js"
+  images: "/static/images"
+
+# Collections (if you have any)
+collections:
+  projects:
+    output: true
+    permalink: /projects/:name/

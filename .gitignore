@@ -7,4 +7,5 @@ __pycache__/
 _site/
 .jekyll-cache/
 .sass-cache/
+.venv/
 

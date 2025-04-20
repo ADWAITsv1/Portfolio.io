@@ -4,3 +4,7 @@ __pycache__/
 *$py.class
 .env
 .DS_Store" > .gitignore
+_site/
+.jekyll-cache/
+.sass-cache/
+

@@ -1,8 +1,6 @@
----
-layout: layout
-title: Research Work - Adwait Varekar
----
+{% extends "layout.html" %}
 
+{% block content %}
 <section id="research-page" class="research-page">
     <div class="section-header">
         <h2>Research Work</h2>
@@ -10,7 +8,7 @@ title: Research Work - Adwait Varekar
     </div>
     
     <div class="container">
-        {% for item in site.data.research %}
+        {% for item in research %}
         <div class="research-item">
             <div class="research-header">
                 <h3>{{ item.title }}</h3>
@@ -23,18 +21,18 @@ title: Research Work - Adwait Varekar
             <!-- Slides Presentation -->
             <div class="slides-container">
                 <div class="slide-navigation">
-                    <button class="slide-nav-btn prev-slide" data-research="{{ forloop.index }}">
+                    <button class="slide-nav-btn prev-slide" data-research="{{ loop.index }}">
                         <i class="fas fa-chevron-left"></i>
                     </button>
                     <span class="slide-counter">
-                        Slide <span id="current-slide-{{ forloop.index }}">1</span> of <span id="total-slides-{{ forloop.index }}">5</span>
+                        Slide <span id="current-slide-{{ loop.index }}">1</span> of <span id="total-slides-{{ loop.index }}">5</span>
                     </span>
-                    <button class="slide-nav-btn next-slide" data-research="{{ forloop.index }}">
+                    <button class="slide-nav-btn next-slide" data-research="{{ loop.index }}">
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
                 
-                <div class="slides" id="slides-{{ forloop.index }}">
+                <div class="slides" id="slides-{{ loop.index }}">
                     <!-- Example slides for research project - replace with your actual slides -->
                     <div class="slide active">
                         <div class="slide-content">
@@ -69,7 +67,7 @@ title: Research Work - Adwait Varekar
                             <h3>Results</h3>
                             <div class="slide-body">
                                 <div class="results-image">
-                                    <img src="{{ site.baseurl }}/static/images/sample-chart.jpg" alt="Research Results">
+                                    <img src="{{ url_for('static', filename='images/sample-chart.jpg') }}" alt="Research Results">
                                 </div>
                                 <p>Key findings and statistical significance</p>
                             </div>
@@ -101,7 +99,7 @@ title: Research Work - Adwait Varekar
                                     <li>Acknowledgments</li>
                                 </ul>
                                 <div class="contact-info">
-                                    <p>For more details: <a href="mailto:cadadwait@gmail.com">cadadwait@gmail.com</a></p>
+                                    <p>For more details: <a href="mailto:your.email@example.com">your.email@example.com</a></p>
                                 </div>
                             </div>
                         </div>
@@ -168,3 +166,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+{% endblock %}

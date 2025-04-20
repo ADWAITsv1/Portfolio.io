@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Adwait Varekar - Portfolio</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ site.baseurl }}/static/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 </head>
 <body>
@@ -54,7 +54,7 @@
             </div>
         </div>
         <div class="hero-image">
-            <img src="{{ url_for('static', filename='images/main_image.png') }}" alt="ADWAIT VAREKAR">
+            <img src="{{ site.baseurl }}/static/images/main_image.png" alt="Adwait Varekar">
     </section>
 
     <section id="projects" class="projects">
@@ -227,6 +227,6 @@
         </div>
     </footer>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ site.baseurl }}/static/js/script.js"></script>
 </body>
 </html>

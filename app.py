@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 import os
+import sys
 from dotenv import load_dotenv
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -13,29 +14,40 @@ app.secret_key = os.getenv('SECRET_KEY', 'default-secret-key')
 
 # Database connection details - use environment variables in production
 DATABASE_URL = os.getenv('DATABASE_URL')
+print(f"Database URL from environment: {DATABASE_URL}", file=sys.stderr)
 
 # Initialize database
 def init_db():
-    conn = psycopg2.connect(DATABASE_URL)
-    cursor = conn.cursor()
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS contact_messages (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        email VARCHAR(100) NOT NULL,
-        message TEXT NOT NULL,
-        timestamp TIMESTAMP NOT NULL
-    )
-    ''')
-    conn.commit()
-    conn.close()
-    print("Database initialized successfully")
+    if not DATABASE_URL:
+        print("WARNING: DATABASE_URL is not set. Database features will not work.", file=sys.stderr)
+        return False
+    
+    try:
+        print(f"Attempting to connect to database...", file=sys.stderr)
+        # Force the use of the database URL instead of defaulting to local socket
+        conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+        cursor = conn.cursor()
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS contact_messages (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            email VARCHAR(100) NOT NULL,
+            message TEXT NOT NULL,
+            timestamp TIMESTAMP NOT NULL
+        )
+        ''')
+        conn.commit()
+        conn.close()
+        print("Database initialized successfully", file=sys.stderr)
+        return True
+    except Exception as e:
+        print(f"Database initialization error: {e}", file=sys.stderr)
+        print(f"Database URL used: {DATABASE_URL}", file=sys.stderr)
+        # Continue running the app even if DB connection fails
+        return False
 
-# Call init_db at application startup - wrap in try/except to handle errors gracefully
-try:
-    init_db()
-except Exception as e:
-    print(f"Database initialization error: {e}")
+# Call init_db at application startup
+db_initialized = init_db()
 
 # Sample project data - you'll replace this with your actual projects
 projects = [
@@ -91,9 +103,16 @@ def contact():
         email = request.form.get('email')
         message = request.form.get('message')
         
+        # Check if database is available
+        if not db_initialized and not DATABASE_URL:
+            flash('Contact form is currently unavailable. Please email me directly at cadadwait@gmail.com.', 'error')
+            print("Form submission attempted but database is not configured", file=sys.stderr)
+            return redirect(url_for('contact'))
+        
         # Store in database
         try:
-            conn = psycopg2.connect(DATABASE_URL)
+            print(f"Connecting to database for message submission...", file=sys.stderr)
+            conn = psycopg2.connect(DATABASE_URL, sslmode='require')
             cursor = conn.cursor()
             timestamp = datetime.now()
             cursor.execute(
@@ -103,19 +122,35 @@ def contact():
             conn.commit()
             conn.close()
             
-            # Send an email notification (optional - add later)
-            
             # Give feedback to user
             flash('Thank you for your message! I will get back to you soon.', 'success')
-            print(f"Message from {name} saved successfully")
+            print(f"Message from {name} saved successfully", file=sys.stderr)
         except Exception as e:
-            print(f"Error saving message: {e}")
+            print(f"Error saving message: {e}", file=sys.stderr)
             flash('There was an error sending your message. Please try again later.', 'error')
         
         # Redirect to avoid form resubmission
         return redirect(url_for('contact'))
         
     return render_template('contact.html')
+
+# Route to check database status (helpful for debugging)
+@app.route('/db-status')
+def db_status():
+    if not DATABASE_URL:
+        return "DATABASE_URL is not set."
+    
+    try:
+        conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+        cursor = conn.cursor()
+        cursor.execute("SELECT version();")
+        version = cursor.fetchone()
+        cursor.execute("SELECT COUNT(*) FROM contact_messages;")
+        count = cursor.fetchone()
+        conn.close()
+        return f"Database connected successfully.<br>PostgreSQL version: {version[0]}<br>Contact messages: {count[0]}"
+    except Exception as e:
+        return f"Database connection error: {str(e)}"
 
 if __name__ == '__main__':
     # Use PORT environment variable for compatibility with Render

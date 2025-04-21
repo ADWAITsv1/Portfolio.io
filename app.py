@@ -13,7 +13,8 @@ app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'default-secret-key')
 
 # Database connection details - use environment variables in production
-DATABASE_URL = os.getenv('DATABASE_URL')
+# Replace the DATABASE_URL variable in app.py
+DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://adwait_portfolio_user:VD6UHceZqb63iGWI7ItyLkn82IRzcafi@dpg-d02p84qdbo4c73f1lpvg-a/adwait_portfolio')
 print(f"Database URL from environment: {DATABASE_URL}", file=sys.stderr)
 
 # Initialize database

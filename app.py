@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 import os
 import sys
 from dotenv import load_dotenv
@@ -55,12 +55,6 @@ def init_db():
         cursor.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'contact_messages');")
         table_exists = cursor.fetchone()[0]
         print(f"Table contact_messages exists: {table_exists}", file=sys.stderr)
-        
-        # Check table structure
-        if table_exists:
-            cursor.execute("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'contact_messages';")
-            columns = cursor.fetchall()
-            print(f"Table columns: {columns}", file=sys.stderr)
         
         conn.close()
         print("Database initialized successfully", file=sys.stderr)
@@ -121,20 +115,40 @@ def research_page():
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     if request.method == 'POST':
-        # Get form data
-        name = request.form.get('name')
-        email = request.form.get('email')
-        message = request.form.get('message')
-        
-        print(f"Form data received - Name: {name}, Email: {email}, Message: {message[:30]}...", file=sys.stderr)
-        
-        # Store in database
         try:
+            # Check if the request is JSON (from JavaScript fetch)
+            if request.is_json:
+                data = request.get_json()
+                name = data.get('name')
+                email = data.get('email')
+                message = data.get('message')
+                print(f"JSON data received - Name: {name}, Email: {email}", file=sys.stderr)
+            else:
+                # Regular form submission
+                name = request.form.get('name')
+                email = request.form.get('email')
+                message = request.form.get('message')
+                print(f"Form data received - Name: {name}, Email: {email}", file=sys.stderr)
+            
+            # Validate data
+            if not all([name, email, message]):
+                print("Missing required fields", file=sys.stderr)
+                if request.is_json:
+                    return jsonify({"status": "error", "message": "Missing required fields"}), 400
+                else:
+                    flash('All fields are required.', 'error')
+                    return redirect(url_for('contact'))
+            
+            # Store in database
             print("Getting database connection...", file=sys.stderr)
             conn = get_db_connection()
             if not conn:
-                flash('Unable to connect to database. Please try again later.', 'error')
-                return redirect(url_for('contact'))
+                print("Failed to connect to database", file=sys.stderr)
+                if request.is_json:
+                    return jsonify({"status": "error", "message": "Database connection error"}), 500
+                else:
+                    flash('Unable to connect to database. Please try again later.', 'error')
+                    return redirect(url_for('contact'))
             
             print("Creating cursor...", file=sys.stderr)
             cursor = conn.cursor()
@@ -152,23 +166,23 @@ def contact():
             
             # Commit the transaction
             conn.commit()
-            
-            # Verify the insertion
-            cursor.execute("SELECT * FROM contact_messages WHERE id = %s;", (inserted_id,))
-            verification = cursor.fetchone()
-            print(f"Verification of inserted data: {verification}", file=sys.stderr)
-            
             conn.close()
             print(f"Message from {name} saved successfully with ID {inserted_id}", file=sys.stderr)
             
-            # Give feedback to user
-            flash('Thank you for your message! I will get back to you soon.', 'success')
+            # Return appropriate response
+            if request.is_json:
+                return jsonify({"status": "success", "message": "Message sent successfully", "id": inserted_id}), 200
+            else:
+                flash('Thank you for your message! I will get back to you soon.', 'success')
+                return redirect(url_for('contact'))
+                
         except Exception as e:
-            print(f"Error saving message: {e}", file=sys.stderr)
-            flash('There was an error sending your message. Please try again later.', 'error')
-        
-        # Redirect to avoid form resubmission
-        return redirect(url_for('contact'))
+            print(f"Error processing form: {e}", file=sys.stderr)
+            if request.is_json:
+                return jsonify({"status": "error", "message": str(e)}), 500
+            else:
+                flash('There was an error sending your message. Please try again later.', 'error')
+                return redirect(url_for('contact'))
     
     return render_template('contact.html')
 

@@ -1,12 +1,44 @@
 {% extends "layout.html" %}
 
-{% block title %}Contact Me - Your Portfolio{% endblock %}
+{% block title %}Contact Me - Portfolio{% endblock %}
+
+{% block extra_css %}
+<style>
+    .alert {
+        padding: 15px;
+        margin: 20px auto;
+        border-radius: 4px;
+        max-width: 80%;
+        text-align: center;
+    }
+    
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    #form-status {
+        display: none;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <section id="contact" class="contact">
     <div class="section-header">
         <h2>Get In Touch</h2>
         <div class="underline"></div>
+    </div>
+    
+    <div id="form-status" class="alert">
+        <p id="status-message"></p>
     </div>
     
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -38,8 +70,7 @@
             </div>
         </div>
         <div class="contact-form">
-            <!-- Make sure the form has the correct action and method -->
-            <form action="{{ url_for('contact') }}" method="POST">
+            <form id="contact-form" method="POST">
                 <div class="form-group">
                     <label for="name">Name</label>
                     <input type="text" id="name" name="name" required>
@@ -57,4 +88,58 @@
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('contact-form');
+        const formStatus = document.getElementById('form-status');
+        const statusMessage = document.getElementById('status-message');
+        
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const data = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                message: formData.get('message')
+            };
+            
+            // Show loading state
+            formStatus.style.display = 'block';
+            formStatus.className = 'alert';
+            statusMessage.textContent = 'Sending message...';
+            
+            // Send the form data as JSON
+            fetch('/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    formStatus.className = 'alert alert-success';
+                    statusMessage.textContent = 'Thank you for your message! I will get back to you soon.';
+                    form.reset();
+                    
+                    // Refresh the db-status page in a different tab (optional)
+                    const dbStatusTab = window.open('/db-status', '_blank');
+                    if (dbStatusTab) setTimeout(() => dbStatusTab.close(), 5000);
+                } else {
+                    formStatus.className = 'alert alert-error';
+                    statusMessage.textContent = 'There was an error sending your message. Please try again later.';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                formStatus.className = 'alert alert-error';
+                statusMessage.textContent = 'There was an error sending your message. Please try again later.';
+            });
+        });
+    });
+</script>
 {% endblock %}
